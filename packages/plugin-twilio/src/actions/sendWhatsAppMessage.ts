@@ -41,14 +41,14 @@ export const sendWhatsAppMessageAction: Action = {
         const text = (_message.content as { text?: string })?.text || '';
         const matches = text.match(mobileNumberRegex);
 
-        const messageRegex = /'([^']+)'/;
+        const messageRegex = /(['"])(.*?)\1/;
         const messageMatch = text.match(messageRegex);
 
         let mobileNumberProvidedByUser = null;
-        let messageToSendFromUser = 'Hi, from SoulSparks';
+        let messageToSendFromUser = null;
 
         if(messageMatch){
-            messageToSendFromUser = messageMatch[1];
+            messageToSendFromUser = messageMatch[2];
         }
         if (matches) {
             // Combine the parts of the number into a single string, removing spaces and plus signs
@@ -80,6 +80,15 @@ export const sendWhatsAppMessageAction: Action = {
 
         if (!twilioNumber) {
             console.error('Twilio WhatsApp number is missing');
+
+            _callback({
+                text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
+            });
+            return false;
+        }
+
+        if(messageToSendFromUser==null){
+            console.error('messageToSendFromUser is empty or null');
 
             _callback({
                 text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
