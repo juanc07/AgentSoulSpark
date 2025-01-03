@@ -1,8 +1,10 @@
 import {
     ActionExample,
+    generateText,
     HandlerCallback,
     IAgentRuntime,
     Memory,
+    ModelClass,
     State,
     type Action,
 } from "@elizaos/core";
@@ -69,15 +71,6 @@ export const sendSmsAction: Action = {
         console.log('check messageToSendFromUser: ', messageToSendFromUser);
         console.log('check twilioNumber: ', twilioNumber);
 
-        if (!mobileNumberProvidedByUser) {
-            console.error('Mobile number is missing');
-
-            _callback({
-                text: `Sorry there was an issue send sms, please try again later`,
-            });
-            return false;
-        }
-
         if (!twilioNumber) {
             console.error('Twilio phone number is missing');
 
@@ -85,6 +78,46 @@ export const sendSmsAction: Action = {
                 text: `Sorry there was an issue send sms, please try again later`,
             });
             return false;
+        }
+
+        const recentMessages =  `Extract the phone number from the user recent messages ${_state.recentMessages}`;
+
+        if (!mobileNumberProvidedByUser) {
+            console.error('Mobile number is missing will try to get the phone number or mobile number from recent messages');
+
+            mobileNumberProvidedByUser = await generateText(
+                {
+                    runtime: _runtime,
+                    context: recentMessages,
+                    modelClass: ModelClass.SMALL,
+                    stop: ["\n"],
+                    customSystemPrompt: "only extract the message that the user intend to send and only get the last one"
+                }
+            );
+        }
+
+        if (!mobileNumberProvidedByUser) {
+            console.error('Mobile number is missing');
+
+            _callback({
+                text: `Sorry,  there was an issue send sms, please try again later`,
+            });
+            return false;
+        }
+
+        const recentUserMessages = `Extract the message intended for SMS or text: ${_state.recentMessages}`;
+
+        if (!messageToSendFromUser) {
+            console.error('messageToSendFromUser is missing will try to get the user message from recent messages');
+
+            messageToSendFromUser = await generateText(
+                {
+                    runtime: _runtime,
+                    context: recentUserMessages,
+                    modelClass: ModelClass.SMALL,
+                    stop: ["\n"]
+                }
+            );
         }
 
         if(messageToSendFromUser==null){

@@ -58,6 +58,7 @@
     "@elizaos/plugin-tee": "workspace:*",
     "@elizaos/plugin-ton": "workspace:*",
     "@elizaos/plugin-twilio": "workspace:*",
+    "@elizaos/plugin-memory": "workspace:*",
     "@elizaos/plugin-twitter": "workspace:*",
     "@elizaos/plugin-zksync-era": "workspace:*",
     "readline": "1.3.0",
